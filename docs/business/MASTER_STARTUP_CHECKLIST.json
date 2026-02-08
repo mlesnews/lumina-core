@@ -1,0 +1,114 @@
+{
+  "startup_master_checklist": {
+    "phase_1_foundation": {
+      "legal_financial": {
+        "business_registration": {
+          "status": "pending",
+          "priority": "critical",
+          "estimated_time": "30 minutes"
+        },
+        "ein_verification": {
+          "status": "pending",
+          "priority": "critical",
+          "estimated_time": "15 minutes"
+        },
+        "business_bank_account": {
+          "status": "pending",
+          "priority": "critical",
+          "estimated_time": "1-2 hours"
+        },
+        "accounting_software": {
+          "status": "pending",
+          "priority": "critical",
+          "estimated_time": "1-2 hours"
+        },
+        "payment_processor": {
+          "status": "pending",
+          "priority": "critical",
+          "estimated_time": "30-60 minutes"
+        }
+      },
+      "communication": {
+        "twilio_account_sid": {
+          "status": "pending",
+          "priority": "critical",
+          "estimated_time": "5 minutes"
+        },
+        "twilio_auth_token": {
+          "status": "pending",
+          "priority": "critical",
+          "estimated_time": "5 minutes"
+        },
+        "twilio_phone_number": {
+          "status": "pending",
+          "priority": "critical",
+          "estimated_time": "10 minutes"
+        },
+        "twilio_credentials_storage": {
+          "status": "pending",
+          "priority": "critical",
+          "estimated_time": "5 minutes"
+        },
+        "email_signature": {
+          "status": "pending",
+          "priority": "medium",
+          "estimated_time": "15 minutes"
+        }
+      },
+      "operations": {
+        "business_config": {
+          "status": "pending",
+          "priority": "high",
+          "estimated_time": "15 minutes"
+        },
+        "sensitive_data_storage": {
+          "status": "pending",
+          "priority": "critical",
+          "estimated_time": "30 minutes"
+        },
+        "first_sop": {
+          "status": "pending",
+          "priority": "medium",
+          "estimated_time": "1 hour"
+        },
+        "task_management": {
+          "status": "completed",
+          "priority": "medium",
+          "estimated_time": "N/A"
+        }
+      }
+    },
+    "phase_2_growth": {
+      "marketing": {
+        "website": {
+          "status": "pending",
+          "priority": "medium"
+        },
+        "social_media": {
+          "status": "pending",
+          "priority": "low"
+        },
+        "business_cards": {
+          "status": "pending",
+          "priority": "low"
+        }
+      },
+      "sales": {
+        "crm_setup": {
+          "status": "pending",
+          "priority": "medium"
+        },
+        "proposal_template": {
+          "status": "completed",
+          "priority": "medium"
+        },
+        "contract_templates": {
+          "status": "pending",
+          "priority": "medium"
+        }
+      }
+    }
+  },
+  "created": "2026-01-16T06:01:19.919094",
+  "last_updated": "2026-01-16T06:01:19.919094"
+}

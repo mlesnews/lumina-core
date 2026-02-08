@@ -1,0 +1,99 @@
+{
+  "ticket_id": "HELPDESK-20260116-DNS-HOMELAB",
+  "title": "Homelab DNS Services Not Responding - pfSense and NAS",
+  "priority": "HIGH",
+  "status": "RESOLVED",
+  "category": "NETWORK",
+  "subcategory": "DNS",
+  "created": "2026-01-16T15:16:40.165014",
+  "assigned_team": "NETWORK_TEAM",
+  "tags": [
+    "#DNS",
+    "#HOMELAB",
+    "#PFSENSE",
+    "#NAS",
+    "#NETWORK",
+    "@JARVIS",
+    "@HELPDESK"
+  ],
+  "issue_summary": {
+    "description": "Both pfSense (10.17.17.1) and NAS (10.17.17.32) DNS services are not responding to queries. DNS port 53 is open but queries timeout.",
+    "impact": [
+      "Browser cannot resolve DNS when using Wi-Fi adapter (configured to use pfSense DNS)",
+      "IPv4 sites appear down in browser",
+      "Blocks browser automation workflows",
+      "Prevents Fidelity credential extraction automation"
+    ],
+    "affected_systems": [
+      "pfSense (10.17.17.1) - Primary DNS",
+      "NAS (10.17.17.32) - Secondary DNS",
+      "Wi-Fi Network Adapter (using pfSense DNS)",
+      "Browser automation (Neo browser)"
+    ]
+  },
+  "diagnostic_findings": {
+    "connectivity": "\u2705 Both servers reachable (ping works)",
+    "dns_port": "\u2705 Port 53 UDP open on both servers",
+    "dns_queries": "\u274c All DNS queries timing out",
+    "root_cause": "DNS service running but not configured with upstream DNS servers",
+    "working_dns": [
+      "ProtonVPN DNS (10.2.0.1) - Working",
+      "Google DNS (8.8.8.8) - Working"
+    ]
+  },
+  "resolution_steps": {
+    "pfSense": [
+      "1. Access pfSense Web UI: https://10.17.17.1",
+      "2. Navigate to: Services > DNS Resolver (or DNS Forwarder)",
+      "3. Enable DNS service",
+      "4. Configure upstream DNS servers:",
+      "   - 8.8.8.8 (Google)",
+      "   - 1.1.1.1 (Cloudflare)",
+      "   - 8.8.4.4 (Google secondary)",
+      "5. Enable 'Enable Forwarding Mode' if using DNS Forwarder",
+      "6. Save and apply changes",
+      "7. Restart DNS service if needed"
+    ],
+    "NAS": [
+      "1. Access NAS Web UI: https://10.17.17.32:5001",
+      "2. Navigate to: Control Panel > Network > DNS Server",
+      "3. Enable DNS service",
+      "4. Configure upstream DNS servers (same as pfSense)",
+      "5. Save and apply changes",
+      "6. Restart DNS service if needed"
+    ],
+    "verification": [
+      "Run: nslookup google.com 10.17.17.1",
+      "Run: nslookup google.com 10.17.17.32",
+      "Run: python scripts/python/verify_homelab_dns_fix.py",
+      "Test browser connectivity",
+      "Retry Fidelity automation workflow"
+    ]
+  },
+  "workflow_monitoring": {
+    "enabled": true,
+    "check_interval": 300,
+    "verification_script": "scripts/python/verify_homelab_dns_fix.py",
+    "success_criteria": {
+      "pfsense_dns": "All test queries successful",
+      "nas_dns": "All test queries successful",
+      "browser_connectivity": "Sites load correctly"
+    },
+    "auto_close_on_resolution": true
+  },
+  "related_tickets": [],
+  "related_files": [
+    "docs/diagnostics/COMPREHENSIVE_SYSTEM_DIAGNOSTIC_REPORT.md",
+    "docs/diagnostics/DNS_VS_REVERSE_DNS_EXPLAINED.md",
+    "scripts/python/fix_homelab_dns_services.py",
+    "scripts/python/verify_homelab_dns_fix.py"
+  ],
+  "last_updated": "2026-01-16T15:17:10.521606",
+  "notes": [
+    {
+      "timestamp": "2026-01-16T15:17:10.521606",
+      "status": "RESOLVED",
+      "note": "DNS resolution verified: Both pfSense and NAS DNS working correctly"
+    }
+  ]
+}

@@ -1,0 +1,464 @@
+{
+  "message_schemas": {
+    "version": "1.0.0",
+    "last_updated": "2026-01-14",
+    "common_properties": {
+      "MessageId": {
+        "type": "string",
+        "format": "uuid",
+        "required": true,
+        "description": "Unique message identifier"
+      },
+      "MessageType": {
+        "type": "string",
+        "required": true,
+        "description": "Type of message"
+      },
+      "Timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "required": true,
+        "description": "Message timestamp (ISO 8601)"
+      },
+      "Source": {
+        "type": "string",
+        "required": true,
+        "description": "Source system identifier"
+      },
+      "CorrelationId": {
+        "type": "string",
+        "format": "uuid",
+        "required": false,
+        "description": "Correlation identifier for request/response"
+      },
+      "Priority": {
+        "type": "string",
+        "enum": ["low", "medium", "high", "critical"],
+        "default": "medium",
+        "description": "Message priority"
+      }
+    },
+    "messages": {
+      "WorkflowCreated": {
+        "topic": "jarvis.workflows",
+        "topic_alt": "lumina.workflows",
+        "properties": {
+          "WorkflowId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "Name": {
+            "type": "string",
+            "required": true
+          },
+          "CreatedBy": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "Priority": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "required": false
+          }
+        }
+      },
+      "WorkflowExecutionRequest": {
+        "topic": "jarvis.workflows",
+        "topic_alt": "lumina.workflows",
+        "queue": "workflow-execution-queue",
+        "properties": {
+          "WorkflowId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "Parameters": {
+            "type": "object",
+            "required": false
+          },
+          "Async": {
+            "type": "boolean",
+            "default": true,
+            "required": false
+          }
+        }
+      },
+      "WorkflowStatusUpdate": {
+        "topic": "jarvis.workflows",
+        "topic_alt": "lumina.workflows",
+        "properties": {
+          "WorkflowId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "Status": {
+            "type": "string",
+            "enum": ["pending", "running", "completed", "failed", "cancelled"],
+            "required": true
+          },
+          "Progress": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "required": false
+          },
+          "CurrentStep": {
+            "type": "string",
+            "required": false
+          }
+        }
+      },
+      "WorkflowCompleted": {
+        "topic": "jarvis.workflows",
+        "topic_alt": "lumina.workflows",
+        "properties": {
+          "WorkflowId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "Status": {
+            "type": "string",
+            "enum": ["completed", "failed"],
+            "required": true
+          },
+          "ExecutionTime": {
+            "type": "number",
+            "required": false
+          },
+          "Result": {
+            "type": "object",
+            "required": false
+          },
+          "Error": {
+            "type": "string",
+            "required": false
+          }
+        }
+      },
+      "EscalationRequest": {
+        "topic": "jarvis.escalations",
+        "queue": "jarvis-escalation-queue",
+        "properties": {
+          "EscalationId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "Title": {
+            "type": "string",
+            "required": true
+          },
+          "Message": {
+            "type": "string",
+            "required": true
+          },
+          "Priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "required": true
+          },
+          "Source": {
+            "type": "string",
+            "required": true
+          },
+          "WorkflowId": {
+            "type": "string",
+            "format": "uuid",
+            "required": false
+          },
+          "TicketId": {
+            "type": "string",
+            "required": false
+          },
+          "Context": {
+            "type": "object",
+            "required": false
+          }
+        }
+      },
+      "EscalationAcknowledged": {
+        "topic": "jarvis.escalations",
+        "properties": {
+          "EscalationId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "AcknowledgedBy": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "AcknowledgedAt": {
+            "type": "string",
+            "format": "date-time",
+            "required": true
+          }
+        }
+      },
+      "IntelligenceItem": {
+        "topic": "jarvis.intelligence",
+        "properties": {
+          "ItemId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "Type": {
+            "type": "string",
+            "enum": ["escalation", "alert", "insight", "recommendation"],
+            "required": true
+          },
+          "Priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "required": true
+          },
+          "Title": {
+            "type": "string",
+            "required": true
+          },
+          "Message": {
+            "type": "string",
+            "required": true
+          },
+          "Source": {
+            "type": "string",
+            "required": true
+          },
+          "ActionRequired": {
+            "type": "boolean",
+            "default": false,
+            "required": false
+          },
+          "Metadata": {
+            "type": "object",
+            "required": false
+          }
+        }
+      },
+      "KnowledgeEntry": {
+        "topic": "r5.knowledge",
+        "queue": "r5-ingestion-queue",
+        "properties": {
+          "EntryId": {
+            "type": "string",
+            "required": true
+          },
+          "SessionId": {
+            "type": "string",
+            "required": false
+          },
+          "Category": {
+            "type": "string",
+            "required": true
+          },
+          "Content": {
+            "type": "string",
+            "required": true
+          },
+          "Tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "required": false
+          },
+          "Source": {
+            "type": "string",
+            "required": false
+          },
+          "ExtractPatterns": {
+            "type": "boolean",
+            "default": true,
+            "required": false
+          },
+          "Metadata": {
+            "type": "object",
+            "required": false
+          }
+        }
+      },
+      "BatchIngestion": {
+        "topic": "r5.knowledge",
+        "queue": "r5-ingestion-queue",
+        "properties": {
+          "BatchId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "Entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/messages/KnowledgeEntry"
+            },
+            "required": true
+          }
+        }
+      },
+      "PatternUpdate": {
+        "topic": "r5.knowledge",
+        "properties": {
+          "PatternId": {
+            "type": "string",
+            "required": true
+          },
+          "Name": {
+            "type": "string",
+            "required": true
+          },
+          "Frequency": {
+            "type": "integer",
+            "required": false
+          },
+          "LastSeen": {
+            "type": "string",
+            "format": "date-time",
+            "required": true
+          }
+        }
+      },
+      "VerificationRequest": {
+        "topic": "lumina.verification",
+        "queue": "verification-queue",
+        "properties": {
+          "VerificationId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "WorkflowId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "VerificationType": {
+            "type": "string",
+            "enum": ["pre_execution", "data_integrity", "aggregation", "pattern_extraction"],
+            "required": true
+          },
+          "Data": {
+            "type": "object",
+            "required": true
+          },
+          "RequiresVerification": {
+            "type": "boolean",
+            "default": true,
+            "required": false
+          }
+        }
+      },
+      "VerificationResult": {
+        "topic": "lumina.verification",
+        "properties": {
+          "VerificationId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "WorkflowId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "Status": {
+            "type": "string",
+            "enum": ["verified", "failed", "warning"],
+            "required": true
+          },
+          "Results": {
+            "type": "object",
+            "required": false
+          },
+          "Errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "required": false
+          }
+        }
+      },
+      "DroidAssignmentRequest": {
+        "topic": "helpdesk.coordination",
+        "queue": "droid-assignment-queue",
+        "properties": {
+          "RequestId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "WorkflowId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "TicketId": {
+            "type": "string",
+            "required": false
+          },
+          "DroidPreference": {
+            "type": "string",
+            "required": false
+          },
+          "Priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "required": true
+          }
+        }
+      },
+      "DroidStatusUpdate": {
+        "topic": "helpdesk.coordination",
+        "properties": {
+          "DroidId": {
+            "type": "string",
+            "required": true
+          },
+          "Status": {
+            "type": "string",
+            "enum": ["available", "busy", "offline"],
+            "required": true
+          },
+          "CurrentWorkflows": {
+            "type": "integer",
+            "required": false
+          },
+          "QueueLength": {
+            "type": "integer",
+            "required": false
+          }
+        }
+      },
+      "C3POMessage": {
+        "topic": "helpdesk.coordination",
+        "properties": {
+          "MessageId": {
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          "Message": {
+            "type": "string",
+            "required": true
+          },
+          "Recipient": {
+            "type": "string",
+            "required": false
+          },
+          "Priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "required": false
+          }
+        }
+      }
+    }
+  }
+}

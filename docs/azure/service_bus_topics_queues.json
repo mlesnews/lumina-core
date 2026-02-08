@@ -1,0 +1,446 @@
+{
+  "service_bus_configuration": {
+    "version": "1.0.0",
+    "last_updated": "2026-01-14",
+    "namespace": {
+      "name": "jarvis-lumina-bus",
+      "resource_group": "jarvis-lumina-rg",
+      "location": "East US 2",
+      "sku": "Standard",
+      "status": "pending_creation"
+    },
+    "topics": [
+      {
+        "name": "jarvis.workflows",
+        "description": "Workflow-related messages for JARVIS system",
+        "max_size_in_megabytes": 1024,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "subscriptions": [
+          {
+            "name": "workflow-processor",
+            "max_delivery_count": 10,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "MessageType = 'WorkflowCreated' OR MessageType = 'WorkflowExecutionRequest'"
+            }
+          },
+          {
+            "name": "workflow-notifications",
+            "max_delivery_count": 5,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "MessageType = 'WorkflowStatusUpdate' OR MessageType = 'WorkflowCompleted'"
+            }
+          },
+          {
+            "name": "workflow-audit",
+            "max_delivery_count": 1,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P30D",
+            "dead_letter_on_message_expiration": false,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "TrueFilter"
+            }
+          }
+        ]
+      },
+      {
+        "name": "jarvis.escalations",
+        "description": "Escalation messages to JARVIS",
+        "max_size_in_megabytes": 512,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "subscriptions": [
+          {
+            "name": "jarvis-escalation-handler",
+            "max_delivery_count": 10,
+            "lock_duration": "PT120S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "MessageType = 'EscalationRequest'"
+            }
+          },
+          {
+            "name": "escalation-notifications",
+            "max_delivery_count": 3,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "Priority = 'high' OR Priority = 'critical'"
+            }
+          }
+        ]
+      },
+      {
+        "name": "jarvis.intelligence",
+        "description": "JARVIS intelligence feed messages",
+        "max_size_in_megabytes": 1024,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "subscriptions": [
+          {
+            "name": "intelligence-processor",
+            "max_delivery_count": 10,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "TrueFilter"
+            }
+          },
+          {
+            "name": "intelligence-feed",
+            "max_delivery_count": 5,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "TrueFilter"
+            }
+          },
+          {
+            "name": "intelligence-analytics",
+            "max_delivery_count": 5,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "TrueFilter"
+            }
+          }
+        ]
+      },
+      {
+        "name": "jarvis.responses",
+        "description": "JARVIS response messages",
+        "max_size_in_megabytes": 512,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "subscriptions": [
+          {
+            "name": "response-handler",
+            "max_delivery_count": 10,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "TrueFilter"
+            }
+          },
+          {
+            "name": "response-notifications",
+            "max_delivery_count": 3,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "TrueFilter"
+            }
+          }
+        ]
+      },
+      {
+        "name": "lumina.workflows",
+        "description": "Workflow-related messages for Lumina system",
+        "max_size_in_megabytes": 1024,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "subscriptions": [
+          {
+            "name": "lumina-workflow-processor",
+            "max_delivery_count": 10,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "MessageType = 'WorkflowCreated' OR MessageType = 'WorkflowExecutionRequest'"
+            }
+          },
+          {
+            "name": "workflow-verification",
+            "max_delivery_count": 5,
+            "lock_duration": "PT120S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "RequiresVerification = true"
+            }
+          },
+          {
+            "name": "workflow-r5-sync",
+            "max_delivery_count": 5,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "MessageType = 'WorkflowCompleted'"
+            }
+          }
+        ]
+      },
+      {
+        "name": "lumina.verification",
+        "description": "Verification messages for @v3 system",
+        "max_size_in_megabytes": 512,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "subscriptions": [
+          {
+            "name": "v3-verification-processor",
+            "max_delivery_count": 5,
+            "lock_duration": "PT120S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "TrueFilter"
+            }
+          },
+          {
+            "name": "verification-audit",
+            "max_delivery_count": 1,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P30D",
+            "dead_letter_on_message_expiration": false,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "TrueFilter"
+            }
+          }
+        ]
+      },
+      {
+        "name": "r5.knowledge",
+        "description": "R5 knowledge ingestion and updates",
+        "max_size_in_megabytes": 2048,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "subscriptions": [
+          {
+            "name": "r5-ingestion-processor",
+            "max_delivery_count": 10,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "MessageType = 'KnowledgeEntry' OR MessageType = 'BatchIngestion'"
+            }
+          },
+          {
+            "name": "r5-pattern-extractor",
+            "max_delivery_count": 10,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "MessageType = 'KnowledgeEntry' AND ExtractPatterns = true"
+            }
+          },
+          {
+            "name": "r5-search-processor",
+            "max_delivery_count": 5,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "MessageType = 'SearchRequest'"
+            }
+          }
+        ]
+      },
+      {
+        "name": "helpdesk.coordination",
+        "description": "Helpdesk coordination and droid assignment",
+        "max_size_in_megabytes": 512,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "subscriptions": [
+          {
+            "name": "helpdesk-coordinator",
+            "max_delivery_count": 10,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "TrueFilter"
+            }
+          },
+          {
+            "name": "droid-assignment",
+            "max_delivery_count": 5,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "SqlFilter",
+              "expression": "MessageType = 'DroidAssignmentRequest'"
+            }
+          },
+          {
+            "name": "helpdesk-notifications",
+            "max_delivery_count": 3,
+            "lock_duration": "PT60S",
+            "default_message_time_to_live": "P7D",
+            "dead_letter_on_message_expiration": true,
+            "enable_batched_operations": true,
+            "filter": {
+              "type": "TrueFilter"
+            }
+          }
+        ]
+      }
+    ],
+    "queues": [
+      {
+        "name": "jarvis-escalation-queue",
+        "description": "Queue for JARVIS escalation processing",
+        "max_size_in_megabytes": 512,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "lock_duration": "PT120S",
+        "max_delivery_count": 10,
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "dead_letter_on_message_expiration": true
+      },
+      {
+        "name": "workflow-execution-queue",
+        "description": "Queue for workflow execution tasks",
+        "max_size_in_megabytes": 2048,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "lock_duration": "PT300S",
+        "max_delivery_count": 5,
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "dead_letter_on_message_expiration": true
+      },
+      {
+        "name": "r5-ingestion-queue",
+        "description": "Queue for R5 knowledge ingestion",
+        "max_size_in_megabytes": 2048,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "lock_duration": "PT60S",
+        "max_delivery_count": 10,
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "dead_letter_on_message_expiration": true
+      },
+      {
+        "name": "verification-queue",
+        "description": "Queue for @v3 verification tasks",
+        "max_size_in_megabytes": 512,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "lock_duration": "PT120S",
+        "max_delivery_count": 5,
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "dead_letter_on_message_expiration": true
+      },
+      {
+        "name": "droid-assignment-queue",
+        "description": "Queue for droid assignment tasks",
+        "max_size_in_megabytes": 256,
+        "default_message_time_to_live": "P7D",
+        "duplicate_detection_history_time_window": "PT1M",
+        "lock_duration": "PT60S",
+        "max_delivery_count": 5,
+        "enable_batched_operations": true,
+        "enable_partitioning": false,
+        "dead_letter_on_message_expiration": true
+      }
+    ],
+    "retry_policy": {
+      "default": {
+        "max_delivery_count": 10,
+        "retry_strategy": "exponential_backoff",
+        "initial_delay_seconds": 1,
+        "max_delay_seconds": 60,
+        "backoff_multiplier": 2.0
+      },
+      "per_queue": {
+        "jarvis-escalation-queue": {
+          "max_delivery_count": 10,
+          "lock_duration_seconds": 120
+        },
+        "workflow-execution-queue": {
+          "max_delivery_count": 5,
+          "lock_duration_seconds": 300
+        },
+        "r5-ingestion-queue": {
+          "max_delivery_count": 10,
+          "lock_duration_seconds": 60
+        },
+        "verification-queue": {
+          "max_delivery_count": 5,
+          "lock_duration_seconds": 120
+        },
+        "droid-assignment-queue": {
+          "max_delivery_count": 5,
+          "lock_duration_seconds": 60
+        }
+      }
+    },
+    "dead_letter_configuration": {
+      "enabled": true,
+      "retention_days": 30,
+      "monitoring": {
+        "alert_threshold": 100,
+        "alert_channels": ["email", "slack"]
+      }
+    }
+  }
+}

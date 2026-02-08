@@ -1,0 +1,449 @@
+{
+  "test_cases": {
+    "version": "1.0.0",
+    "last_updated": "2026-01-14",
+    "test_suites": {
+      "authentication": {
+        "suite_name": "Authentication Tests",
+        "test_cases": [
+          {
+            "id": "AUTH-001",
+            "name": "Successful login with valid credentials",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "POST /api/v1/auth/login with valid username/password",
+              "Verify 200 OK response",
+              "Verify access_token and refresh_token in response",
+              "Verify token is valid JWT"
+            ],
+            "expected_result": "Login successful, tokens returned"
+          },
+          {
+            "id": "AUTH-002",
+            "name": "Login fails with invalid credentials",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "POST /api/v1/auth/login with invalid password",
+              "Verify 401 Unauthorized response",
+              "Verify error code AUTH_INVALID"
+            ],
+            "expected_result": "Login fails with authentication error"
+          },
+          {
+            "id": "AUTH-003",
+            "name": "Token refresh with valid refresh token",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "POST /api/v1/auth/refresh with valid refresh_token",
+              "Verify 200 OK response",
+              "Verify new access_token returned",
+              "Verify old refresh_token still valid (if rotation disabled)"
+            ],
+            "expected_result": "New access token returned"
+          },
+          {
+            "id": "AUTH-004",
+            "name": "Token refresh fails with expired token",
+            "type": "integration",
+            "priority": "medium",
+            "steps": [
+              "POST /api/v1/auth/refresh with expired refresh_token",
+              "Verify 401 Unauthorized response",
+              "Verify error code AUTH_EXPIRED"
+            ],
+            "expected_result": "Token refresh fails"
+          },
+          {
+            "id": "AUTH-005",
+            "name": "Access protected endpoint with valid token",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "Login to get access token",
+              "GET /api/v1/workflows with Authorization header",
+              "Verify 200 OK response"
+            ],
+            "expected_result": "Request succeeds"
+          },
+          {
+            "id": "AUTH-006",
+            "name": "Access protected endpoint without token",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "GET /api/v1/workflows without Authorization header",
+              "Verify 401 Unauthorized response",
+              "Verify error code AUTH_REQUIRED"
+            ],
+            "expected_result": "Request fails with authentication error"
+          }
+        ]
+      },
+      "workflows": {
+        "suite_name": "Workflow Tests",
+        "test_cases": [
+          {
+            "id": "WF-001",
+            "name": "Create workflow with valid data",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "POST /api/v1/workflows with valid workflow data",
+              "Verify 201 Created response",
+              "Verify workflow created with status 'pending'",
+              "Verify workflow has assigned ID"
+            ],
+            "expected_result": "Workflow created successfully"
+          },
+          {
+            "id": "WF-002",
+            "name": "Create workflow fails with invalid data",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "POST /api/v1/workflows with name < 3 characters",
+              "Verify 400 Bad Request response",
+              "Verify validation error details"
+            ],
+            "expected_result": "Workflow creation fails with validation error"
+          },
+          {
+            "id": "WF-003",
+            "name": "Execute workflow in pending status",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "Create workflow with status 'pending'",
+              "POST /api/v1/workflows/{id}/execute",
+              "Verify 202 Accepted response (async) or 200 OK (sync)",
+              "Verify workflow status changes to 'running'",
+              "Verify workflow completes successfully"
+            ],
+            "expected_result": "Workflow executes successfully"
+          },
+          {
+            "id": "WF-004",
+            "name": "Execute workflow fails when not in pending status",
+            "type": "integration",
+            "priority": "medium",
+            "steps": [
+              "Create workflow and execute (status = 'running')",
+              "POST /api/v1/workflows/{id}/execute again",
+              "Verify 400 Bad Request response",
+              "Verify error message about invalid status"
+            ],
+            "expected_result": "Workflow execution fails"
+          },
+          {
+            "id": "WF-005",
+            "name": "Get workflow by ID",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "Create workflow",
+              "GET /api/v1/workflows/{id}",
+              "Verify 200 OK response",
+              "Verify workflow data matches created workflow"
+            ],
+            "expected_result": "Workflow retrieved successfully"
+          },
+          {
+            "id": "WF-006",
+            "name": "List workflows with filtering",
+            "type": "integration",
+            "priority": "medium",
+            "steps": [
+              "Create multiple workflows with different statuses",
+              "GET /api/v1/workflows?status=pending",
+              "Verify 200 OK response",
+              "Verify only pending workflows returned"
+            ],
+            "expected_result": "Filtered workflows returned"
+          },
+          {
+            "id": "WF-007",
+            "name": "Update workflow in pending status",
+            "type": "integration",
+            "priority": "medium",
+            "steps": [
+              "Create workflow with status 'pending'",
+              "PUT /api/v1/workflows/{id} with updated data",
+              "Verify 200 OK response",
+              "Verify workflow updated"
+            ],
+            "expected_result": "Workflow updated successfully"
+          },
+          {
+            "id": "WF-008",
+            "name": "Update workflow fails when not in pending status",
+            "type": "integration",
+            "priority": "medium",
+            "steps": [
+              "Create and execute workflow (status = 'running')",
+              "PUT /api/v1/workflows/{id}",
+              "Verify 400 Bad Request response"
+            ],
+            "expected_result": "Workflow update fails"
+          },
+          {
+            "id": "WF-009",
+            "name": "Delete workflow in pending status",
+            "type": "integration",
+            "priority": "medium",
+            "steps": [
+              "Create workflow with status 'pending'",
+              "DELETE /api/v1/workflows/{id}",
+              "Verify 200 OK response",
+              "Verify workflow deleted",
+              "GET /api/v1/workflows/{id} returns 404"
+            ],
+            "expected_result": "Workflow deleted successfully"
+          },
+          {
+            "id": "WF-010",
+            "name": "Workflow step execution and failure handling",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "Create workflow with multiple steps",
+              "Execute workflow",
+              "Simulate step failure",
+              "Verify workflow status changes to 'failed'",
+              "Verify remaining steps not executed"
+            ],
+            "expected_result": "Workflow fails correctly on step failure"
+          }
+        ]
+      },
+      "chat": {
+        "suite_name": "Chat Tests",
+        "test_cases": [
+          {
+            "id": "CHAT-001",
+            "name": "Send message and receive response",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "POST /api/v1/chat/message with message text",
+              "Verify 200 OK response",
+              "Verify response contains message_id and response text",
+              "Verify conversation_id returned"
+            ],
+            "expected_result": "Message sent and response received"
+          },
+          {
+            "id": "CHAT-002",
+            "name": "Get chat history",
+            "type": "integration",
+            "priority": "medium",
+            "steps": [
+              "Send multiple messages",
+              "GET /api/v1/chat/history",
+              "Verify 200 OK response",
+              "Verify all messages in history"
+            ],
+            "expected_result": "Chat history retrieved"
+          },
+          {
+            "id": "CHAT-003",
+            "name": "Streaming chat response",
+            "type": "integration",
+            "priority": "medium",
+            "steps": [
+              "POST /api/v1/chat/message with stream=true",
+              "Verify streaming response (SSE or WebSocket)",
+              "Verify chunks received incrementally"
+            ],
+            "expected_result": "Streaming response works"
+          }
+        ]
+      },
+      "r5_knowledge": {
+        "suite_name": "R5 Knowledge Tests",
+        "test_cases": [
+          {
+            "id": "R5-001",
+            "name": "Get R5 matrix",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "Create knowledge entries",
+              "GET /api/v1/r5/matrix",
+              "Verify 200 OK response",
+              "Verify matrix contains entries"
+            ],
+            "expected_result": "R5 matrix retrieved"
+          },
+          {
+            "id": "R5-002",
+            "name": "Search R5 knowledge",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "Create knowledge entries with specific content",
+              "POST /api/v1/r5/search with query",
+              "Verify 200 OK response",
+              "Verify relevant results returned",
+              "Verify relevance scores included"
+            ],
+            "expected_result": "Search returns relevant results"
+          },
+          {
+            "id": "R5-003",
+            "name": "Pattern extraction",
+            "type": "integration",
+            "priority": "medium",
+            "steps": [
+              "Create knowledge entry with ExtractPatterns=true",
+              "Wait for pattern extraction",
+              "GET /api/v1/r5/patterns",
+              "Verify patterns extracted"
+            ],
+            "expected_result": "Patterns extracted correctly"
+          }
+        ]
+      },
+      "helpdesk": {
+        "suite_name": "Helpdesk Tests",
+        "test_cases": [
+          {
+            "id": "HD-001",
+            "name": "Get helpdesk status",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "GET /api/v1/helpdesk/status",
+              "Verify 200 OK response",
+              "Verify droid status information",
+              "Verify queue information"
+            ],
+            "expected_result": "Helpdesk status retrieved"
+          },
+          {
+            "id": "HD-002",
+            "name": "Droid assignment",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "Create workflow",
+              "Trigger droid assignment",
+              "Verify droid assigned",
+              "Verify droid status updated"
+            ],
+            "expected_result": "Droid assigned correctly"
+          },
+          {
+            "id": "HD-003",
+            "name": "Escalate to JARVIS",
+            "type": "integration",
+            "priority": "high",
+            "steps": [
+              "POST /api/v1/helpdesk/escalate",
+              "Verify 202 Accepted response",
+              "Verify escalation created",
+              "Verify escalation in intelligence feed"
+            ],
+            "expected_result": "Escalation created and processed"
+          }
+        ]
+      },
+      "performance": {
+        "suite_name": "Performance Tests",
+        "test_cases": [
+          {
+            "id": "PERF-001",
+            "name": "API response time under load",
+            "type": "performance",
+            "priority": "high",
+            "steps": [
+              "Load test with 100 concurrent users",
+              "Measure response times",
+              "Verify p95 response time < requirements"
+            ],
+            "expected_result": "Response times meet requirements"
+          },
+          {
+            "id": "PERF-002",
+            "name": "Throughput test",
+            "type": "performance",
+            "priority": "high",
+            "steps": [
+              "Load test with increasing load",
+              "Measure requests per second",
+              "Verify throughput meets requirements"
+            ],
+            "expected_result": "Throughput meets requirements"
+          },
+          {
+            "id": "PERF-003",
+            "name": "Database query performance",
+            "type": "performance",
+            "priority": "medium",
+            "steps": [
+              "Execute database queries",
+              "Measure query execution time",
+              "Verify queries meet performance requirements"
+            ],
+            "expected_result": "Database queries perform well"
+          }
+        ]
+      },
+      "security": {
+        "suite_name": "Security Tests",
+        "test_cases": [
+          {
+            "id": "SEC-001",
+            "name": "SQL injection prevention",
+            "type": "security",
+            "priority": "critical",
+            "steps": [
+              "Attempt SQL injection in input fields",
+              "Verify queries are parameterized",
+              "Verify no SQL injection possible"
+            ],
+            "expected_result": "SQL injection prevented"
+          },
+          {
+            "id": "SEC-002",
+            "name": "XSS prevention",
+            "type": "security",
+            "priority": "critical",
+            "steps": [
+              "Attempt XSS in input fields",
+              "Verify input sanitized",
+              "Verify XSS prevented"
+            ],
+            "expected_result": "XSS prevented"
+          },
+          {
+            "id": "SEC-003",
+            "name": "Authentication bypass",
+            "type": "security",
+            "priority": "critical",
+            "steps": [
+              "Attempt to access protected endpoints without auth",
+              "Attempt token manipulation",
+              "Verify authentication enforced"
+            ],
+            "expected_result": "Authentication cannot be bypassed"
+          },
+          {
+            "id": "SEC-004",
+            "name": "Authorization enforcement",
+            "type": "security",
+            "priority": "high",
+            "steps": [
+              "Attempt to access resources without permissions",
+              "Verify 403 Forbidden returned",
+              "Verify authorization enforced"
+            ],
+            "expected_result": "Authorization enforced"
+          }
+        ]
+      }
+    }
+  }
+}

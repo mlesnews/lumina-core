@@ -1,0 +1,222 @@
+{
+  "database_schemas": {
+    "version": "1.0.0",
+    "database_type": "PostgreSQL",
+    "last_updated": "2026-01-14",
+    "tables": {
+      "users": {
+        "create_table": "CREATE TABLE users (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  username VARCHAR(50) UNIQUE NOT NULL,\n  email VARCHAR(255) UNIQUE NOT NULL,\n  password_hash VARCHAR(255) NOT NULL,\n  permissions TEXT[] DEFAULT '{}',\n  preferences JSONB DEFAULT '{}',\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  last_login TIMESTAMP WITH TIME ZONE,\n  is_active BOOLEAN DEFAULT TRUE\n);",
+        "indexes": [
+          "CREATE INDEX idx_users_username ON users(username);",
+          "CREATE INDEX idx_users_email ON users(email);",
+          "CREATE INDEX idx_users_is_active ON users(is_active);"
+        ],
+        "constraints": [
+          "ALTER TABLE users ADD CONSTRAINT chk_username_length CHECK (LENGTH(username) >= 3 AND LENGTH(username) <= 50);",
+          "ALTER TABLE users ADD CONSTRAINT chk_email_format CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$');"
+        ]
+      },
+      "devices": {
+        "create_table": "CREATE TABLE devices (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n  device_id VARCHAR(255) UNIQUE NOT NULL,\n  device_name VARCHAR(100) NOT NULL,\n  device_type VARCHAR(50) NOT NULL CHECK (device_type IN ('desktop', 'mobile', 'widget', 'ide')),\n  platform VARCHAR(50) NOT NULL CHECK (platform IN ('windows', 'macos', 'linux', 'ios', 'android')),\n  last_seen TIMESTAMP WITH TIME ZONE,\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  is_active BOOLEAN DEFAULT TRUE\n);",
+        "indexes": [
+          "CREATE INDEX idx_devices_user_id ON devices(user_id);",
+          "CREATE INDEX idx_devices_device_id ON devices(device_id);",
+          "CREATE INDEX idx_devices_is_active ON devices(is_active);"
+        ]
+      },
+      "access_tokens": {
+        "create_table": "CREATE TABLE access_tokens (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n  device_id UUID REFERENCES devices(id) ON DELETE SET NULL,\n  token_jti VARCHAR(255) UNIQUE NOT NULL,\n  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  revoked_at TIMESTAMP WITH TIME ZONE,\n  is_revoked BOOLEAN DEFAULT FALSE\n);",
+        "indexes": [
+          "CREATE INDEX idx_access_tokens_user_id ON access_tokens(user_id);",
+          "CREATE INDEX idx_access_tokens_token_jti ON access_tokens(token_jti);",
+          "CREATE INDEX idx_access_tokens_is_revoked ON access_tokens(is_revoked);",
+          "CREATE INDEX idx_access_tokens_expires_at ON access_tokens(expires_at);"
+        ]
+      },
+      "refresh_tokens": {
+        "create_table": "CREATE TABLE refresh_tokens (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n  device_id UUID REFERENCES devices(id) ON DELETE SET NULL,\n  token_hash VARCHAR(255) NOT NULL,\n  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  revoked_at TIMESTAMP WITH TIME ZONE,\n  is_revoked BOOLEAN DEFAULT FALSE,\n  rotated_from UUID REFERENCES refresh_tokens(id) ON DELETE SET NULL\n);",
+        "indexes": [
+          "CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);",
+          "CREATE INDEX idx_refresh_tokens_is_revoked ON refresh_tokens(is_revoked);",
+          "CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);"
+        ]
+      },
+      "workflows": {
+        "create_table": "CREATE TABLE workflows (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  name VARCHAR(100) NOT NULL,\n  description TEXT,\n  status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'running', 'completed', 'failed', 'cancelled')),\n  priority INTEGER NOT NULL DEFAULT 5 CHECK (priority >= 1 AND priority <= 10),\n  created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,\n  droid_assigned VARCHAR(100),\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  started_at TIMESTAMP WITH TIME ZONE,\n  completed_at TIMESTAMP WITH TIME ZONE,\n  execution_time FLOAT,\n  parameters JSONB,\n  result JSONB,\n  error TEXT\n);",
+        "indexes": [
+          "CREATE INDEX idx_workflows_created_by ON workflows(created_by);",
+          "CREATE INDEX idx_workflows_status ON workflows(status);",
+          "CREATE INDEX idx_workflows_created_at ON workflows(created_at);",
+          "CREATE INDEX idx_workflows_droid_assigned ON workflows(droid_assigned);"
+        ],
+        "constraints": [
+          "ALTER TABLE workflows ADD CONSTRAINT chk_name_length CHECK (LENGTH(name) >= 3 AND LENGTH(name) <= 100);"
+        ]
+      },
+      "workflow_steps": {
+        "create_table": "CREATE TABLE workflow_steps (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  workflow_id UUID NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,\n  step_id VARCHAR(50) NOT NULL,\n  name VARCHAR(100) NOT NULL,\n  action VARCHAR(100) NOT NULL,\n  status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'running', 'completed', 'failed', 'skipped')),\n  \"order\" INTEGER NOT NULL,\n  parameters JSONB NOT NULL,\n  started_at TIMESTAMP WITH TIME ZONE,\n  completed_at TIMESTAMP WITH TIME ZONE,\n  execution_time FLOAT,\n  error TEXT,\n  result JSONB,\n  UNIQUE(workflow_id, step_id),\n  UNIQUE(workflow_id, \"order\")\n);",
+        "indexes": [
+          "CREATE INDEX idx_workflow_steps_workflow_id ON workflow_steps(workflow_id);",
+          "CREATE INDEX idx_workflow_steps_status ON workflow_steps(status);"
+        ]
+      },
+      "workflow_logs": {
+        "create_table": "CREATE TABLE workflow_logs (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  workflow_id UUID NOT NULL REFERENCES workflows(id) ON DELETE CASCADE,\n  step_id UUID REFERENCES workflow_steps(id) ON DELETE SET NULL,\n  level VARCHAR(50) NOT NULL CHECK (level IN ('info', 'warning', 'error', 'debug')),\n  message TEXT NOT NULL,\n  timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  metadata JSONB\n);",
+        "indexes": [
+          "CREATE INDEX idx_workflow_logs_workflow_id ON workflow_logs(workflow_id);",
+          "CREATE INDEX idx_workflow_logs_step_id ON workflow_logs(step_id);",
+          "CREATE INDEX idx_workflow_logs_timestamp ON workflow_logs(timestamp);",
+          "CREATE INDEX idx_workflow_logs_level ON workflow_logs(level);"
+        ]
+      },
+      "conversations": {
+        "create_table": "CREATE TABLE conversations (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,\n  title VARCHAR(200),\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  last_message_at TIMESTAMP WITH TIME ZONE,\n  message_count INTEGER DEFAULT 0,\n  is_archived BOOLEAN DEFAULT FALSE\n);",
+        "indexes": [
+          "CREATE INDEX idx_conversations_user_id ON conversations(user_id);",
+          "CREATE INDEX idx_conversations_updated_at ON conversations(updated_at);",
+          "CREATE INDEX idx_conversations_is_archived ON conversations(is_archived);"
+        ]
+      },
+      "chat_messages": {
+        "create_table": "CREATE TABLE chat_messages (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,\n  role VARCHAR(50) NOT NULL CHECK (role IN ('user', 'assistant', 'system')),\n  content TEXT NOT NULL,\n  timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  metadata JSONB,\n  parent_message_id UUID REFERENCES chat_messages(id) ON DELETE SET NULL,\n  is_edited BOOLEAN DEFAULT FALSE,\n  edited_at TIMESTAMP WITH TIME ZONE\n);",
+        "indexes": [
+          "CREATE INDEX idx_chat_messages_conversation_id ON chat_messages(conversation_id);",
+          "CREATE INDEX idx_chat_messages_timestamp ON chat_messages(timestamp);",
+          "CREATE INDEX idx_chat_messages_parent_message_id ON chat_messages(parent_message_id);"
+        ],
+        "constraints": [
+          "ALTER TABLE chat_messages ADD CONSTRAINT chk_content_length CHECK (LENGTH(content) <= 100000);"
+        ]
+      },
+      "r5_sessions": {
+        "create_table": "CREATE TABLE r5_sessions (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  session_id VARCHAR(255) UNIQUE NOT NULL,\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()\n);",
+        "indexes": [
+          "CREATE INDEX idx_r5_sessions_session_id ON r5_sessions(session_id);"
+        ]
+      },
+      "r5_entries": {
+        "create_table": "CREATE TABLE r5_entries (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  session_id UUID REFERENCES r5_sessions(id) ON DELETE SET NULL,\n  entry_id VARCHAR(255) UNIQUE NOT NULL,\n  category VARCHAR(100) NOT NULL,\n  content TEXT NOT NULL,\n  tags TEXT[] DEFAULT '{}',\n  patterns TEXT[] DEFAULT '{}',\n  timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  metadata JSONB,\n  source VARCHAR(255),\n  relevance_score FLOAT CHECK (relevance_score >= 0.0 AND relevance_score <= 1.0)\n);",
+        "indexes": [
+          "CREATE INDEX idx_r5_entries_session_id ON r5_entries(session_id);",
+          "CREATE INDEX idx_r5_entries_entry_id ON r5_entries(entry_id);",
+          "CREATE INDEX idx_r5_entries_category ON r5_entries(category);",
+          "CREATE INDEX idx_r5_entries_timestamp ON r5_entries(timestamp);",
+          "CREATE INDEX idx_r5_entries_tags ON r5_entries USING GIN(tags);"
+        ],
+        "constraints": [
+          "ALTER TABLE r5_entries ADD CONSTRAINT chk_content_length CHECK (LENGTH(content) <= 100000);"
+        ]
+      },
+      "r5_patterns": {
+        "create_table": "CREATE TABLE r5_patterns (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  pattern_id VARCHAR(255) UNIQUE NOT NULL,\n  name VARCHAR(200) NOT NULL,\n  description TEXT,\n  frequency INTEGER DEFAULT 0 CHECK (frequency >= 0),\n  first_seen TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  last_seen TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  categories TEXT[] DEFAULT '{}',\n  related_patterns TEXT[] DEFAULT '{}',\n  metadata JSONB\n);",
+        "indexes": [
+          "CREATE INDEX idx_r5_patterns_pattern_id ON r5_patterns(pattern_id);",
+          "CREATE INDEX idx_r5_patterns_frequency ON r5_patterns(frequency);",
+          "CREATE INDEX idx_r5_patterns_last_seen ON r5_patterns(last_seen);"
+        ],
+        "constraints": [
+          "ALTER TABLE r5_patterns ADD CONSTRAINT chk_last_seen_after_first_seen CHECK (last_seen >= first_seen);"
+        ]
+      },
+      "r5_pattern_occurrences": {
+        "create_table": "CREATE TABLE r5_pattern_occurrences (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  pattern_id UUID NOT NULL REFERENCES r5_patterns(id) ON DELETE CASCADE,\n  entry_id UUID NOT NULL REFERENCES r5_entries(id) ON DELETE CASCADE,\n  context TEXT,\n  timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  confidence FLOAT CHECK (confidence >= 0.0 AND confidence <= 1.0)\n);",
+        "indexes": [
+          "CREATE INDEX idx_r5_pattern_occurrences_pattern_id ON r5_pattern_occurrences(pattern_id);",
+          "CREATE INDEX idx_r5_pattern_occurrences_entry_id ON r5_pattern_occurrences(entry_id);"
+        ]
+      },
+      "helpdesk_tickets": {
+        "create_table": "CREATE TABLE helpdesk_tickets (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  ticket_id VARCHAR(20) UNIQUE NOT NULL CHECK (ticket_id ~ '^T[0-9]{9}$'),\n  title VARCHAR(200) NOT NULL,\n  description TEXT NOT NULL,\n  status VARCHAR(50) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved', 'closed')),\n  priority VARCHAR(50) NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'critical')),\n  created_by UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,\n  assigned_to UUID REFERENCES users(id) ON DELETE SET NULL,\n  droid_assigned VARCHAR(100),\n  workflow_id UUID REFERENCES workflows(id) ON DELETE SET NULL,\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  resolved_at TIMESTAMP WITH TIME ZONE,\n  closed_at TIMESTAMP WITH TIME ZONE,\n  tags TEXT[] DEFAULT '{}'\n);",
+        "indexes": [
+          "CREATE INDEX idx_helpdesk_tickets_ticket_id ON helpdesk_tickets(ticket_id);",
+          "CREATE INDEX idx_helpdesk_tickets_created_by ON helpdesk_tickets(created_by);",
+          "CREATE INDEX idx_helpdesk_tickets_status ON helpdesk_tickets(status);",
+          "CREATE INDEX idx_helpdesk_tickets_priority ON helpdesk_tickets(priority);",
+          "CREATE INDEX idx_helpdesk_tickets_created_at ON helpdesk_tickets(created_at);"
+        ],
+        "constraints": [
+          "ALTER TABLE helpdesk_tickets ADD CONSTRAINT chk_description_length CHECK (LENGTH(description) <= 5000);"
+        ]
+      },
+      "helpdesk_comments": {
+        "create_table": "CREATE TABLE helpdesk_comments (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  ticket_id UUID NOT NULL REFERENCES helpdesk_tickets(id) ON DELETE CASCADE,\n  user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,\n  content TEXT NOT NULL,\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  is_internal BOOLEAN DEFAULT FALSE,\n  attachments TEXT[] DEFAULT '{}'\n);",
+        "indexes": [
+          "CREATE INDEX idx_helpdesk_comments_ticket_id ON helpdesk_comments(ticket_id);",
+          "CREATE INDEX idx_helpdesk_comments_user_id ON helpdesk_comments(user_id);",
+          "CREATE INDEX idx_helpdesk_comments_created_at ON helpdesk_comments(created_at);"
+        ],
+        "constraints": [
+          "ALTER TABLE helpdesk_comments ADD CONSTRAINT chk_content_length CHECK (LENGTH(content) <= 5000);"
+        ]
+      },
+      "droids": {
+        "create_table": "CREATE TABLE droids (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  droid_id VARCHAR(255) UNIQUE NOT NULL,\n  name VARCHAR(100) NOT NULL,\n  type VARCHAR(50) NOT NULL CHECK (type IN ('C-3PO', 'R2-D2', 'K-2SO', '2-1B', 'IG-88', 'Mouse Droid', 'R5-D4', 'Marvin')),\n  status VARCHAR(50) NOT NULL DEFAULT 'available' CHECK (status IN ('available', 'busy', 'offline')),\n  current_workflows INTEGER DEFAULT 0 CHECK (current_workflows >= 0),\n  queue_length INTEGER DEFAULT 0 CHECK (queue_length >= 0),\n  total_workflows_processed INTEGER DEFAULT 0 CHECK (total_workflows_processed >= 0),\n  success_rate FLOAT DEFAULT 1.0 CHECK (success_rate >= 0.0 AND success_rate <= 1.0),\n  average_processing_time FLOAT DEFAULT 0 CHECK (average_processing_time >= 0),\n  last_active TIMESTAMP WITH TIME ZONE,\n  capabilities TEXT[] DEFAULT '{}',\n  metadata JSONB\n);",
+        "indexes": [
+          "CREATE INDEX idx_droids_droid_id ON droids(droid_id);",
+          "CREATE INDEX idx_droids_status ON droids(status);",
+          "CREATE INDEX idx_droids_type ON droids(type);"
+        ]
+      },
+      "intelligence_items": {
+        "create_table": "CREATE TABLE intelligence_items (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  type VARCHAR(50) NOT NULL CHECK (type IN ('escalation', 'alert', 'insight', 'recommendation')),\n  priority VARCHAR(50) NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'critical')),\n  title VARCHAR(200) NOT NULL,\n  message TEXT NOT NULL,\n  source VARCHAR(255) NOT NULL,\n  action_required BOOLEAN DEFAULT FALSE,\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  acknowledged_at TIMESTAMP WITH TIME ZONE,\n  resolved_at TIMESTAMP WITH TIME ZONE,\n  acknowledged_by UUID REFERENCES users(id) ON DELETE SET NULL,\n  metadata JSONB,\n  related_workflow_id UUID REFERENCES workflows(id) ON DELETE SET NULL,\n  related_ticket_id UUID REFERENCES helpdesk_tickets(id) ON DELETE SET NULL\n);",
+        "indexes": [
+          "CREATE INDEX idx_intelligence_items_type ON intelligence_items(type);",
+          "CREATE INDEX idx_intelligence_items_priority ON intelligence_items(priority);",
+          "CREATE INDEX idx_intelligence_items_created_at ON intelligence_items(created_at);",
+          "CREATE INDEX idx_intelligence_items_action_required ON intelligence_items(action_required);"
+        ],
+        "constraints": [
+          "ALTER TABLE intelligence_items ADD CONSTRAINT chk_message_length CHECK (LENGTH(message) <= 5000);"
+        ]
+      },
+      "escalations": {
+        "create_table": "CREATE TABLE escalations (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  escalation_id VARCHAR(255) UNIQUE NOT NULL,\n  title VARCHAR(200) NOT NULL,\n  message TEXT NOT NULL,\n  status VARCHAR(50) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'acknowledged', 'resolved')),\n  priority VARCHAR(50) NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'critical')),\n  source VARCHAR(255) NOT NULL,\n  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  acknowledged_at TIMESTAMP WITH TIME ZONE,\n  resolved_at TIMESTAMP WITH TIME ZONE,\n  acknowledged_by UUID REFERENCES users(id) ON DELETE SET NULL,\n  context JSONB,\n  workflow_id UUID REFERENCES workflows(id) ON DELETE SET NULL,\n  ticket_id UUID REFERENCES helpdesk_tickets(id) ON DELETE SET NULL\n);",
+        "indexes": [
+          "CREATE INDEX idx_escalations_escalation_id ON escalations(escalation_id);",
+          "CREATE INDEX idx_escalations_status ON escalations(status);",
+          "CREATE INDEX idx_escalations_priority ON escalations(priority);",
+          "CREATE INDEX idx_escalations_created_at ON escalations(created_at);"
+        ],
+        "constraints": [
+          "ALTER TABLE escalations ADD CONSTRAINT chk_message_length CHECK (LENGTH(message) <= 5000);"
+        ]
+      },
+      "system_components": {
+        "create_table": "CREATE TABLE system_components (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  component_name VARCHAR(255) UNIQUE NOT NULL,\n  status VARCHAR(50) NOT NULL CHECK (status IN ('operational', 'degraded', 'down')),\n  version VARCHAR(50),\n  last_updated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  health_check_url VARCHAR(500),\n  metadata JSONB\n);",
+        "indexes": [
+          "CREATE INDEX idx_system_components_component_name ON system_components(component_name);",
+          "CREATE INDEX idx_system_components_status ON system_components(status);"
+        ]
+      },
+      "health_checks": {
+        "create_table": "CREATE TABLE health_checks (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  check_name VARCHAR(255) NOT NULL,\n  status VARCHAR(50) NOT NULL CHECK (status IN ('healthy', 'unhealthy')),\n  timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),\n  response_time FLOAT CHECK (response_time >= 0),\n  error TEXT,\n  metadata JSONB\n);",
+        "indexes": [
+          "CREATE INDEX idx_health_checks_check_name ON health_checks(check_name);",
+          "CREATE INDEX idx_health_checks_timestamp ON health_checks(timestamp);",
+          "CREATE INDEX idx_health_checks_status ON health_checks(status);"
+        ]
+      }
+    },
+    "triggers": {
+      "update_updated_at": {
+        "description": "Automatically update updated_at timestamp",
+        "function": "CREATE OR REPLACE FUNCTION update_updated_at_column()\nRETURNS TRIGGER AS $$\nBEGIN\n  NEW.updated_at = NOW();\n  RETURN NEW;\nEND;\n$$ language 'plpgsql';",
+        "apply_to": [
+          "users",
+          "workflows",
+          "conversations",
+          "chat_messages",
+          "helpdesk_tickets",
+          "helpdesk_comments"
+        ]
+      }
+    },
+    "migrations": {
+      "initial": {
+        "version": "1.0.0",
+        "description": "Initial database schema",
+        "rollback": "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+      }
+    }
+  }
+}

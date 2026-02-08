@@ -1,0 +1,153 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+secrets.json
+credentials.json
+*_secrets.json
+*_credentials.json
+*_api_keys.json
+.env.*
+
+# API Keys and Tokens (Financial Services Critical)
+*api_key*
+*apikey*
+*token*
+*secret*
+*password*
+*.credentials
+auth_token
+access_token
+refresh_token
+
+# Azure and Cloud
+*.publishsettings
+*.azurePubxml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+.cache/
+
+# Node (if any)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Docker
+docker-compose.override.yml
+
+# Financial Services Specific
+financial_data/
+customer_data/
+transactions/
+pii/
+personal_info/
+bank_data/
+plaid_credentials/
+stripe_keys/
+
+# Lumina Specific
+data/
+*.pkl
+*.pickle
+models/
+checkpoints/
+.lumina_cache/
+
+# Large data files (cache/logs/databases)
+data/ask_cache/*.json
+data/heartbeat_monitor/*.jsonl
+data/holocrons/*.db
+data/lumina_syphon/*.json
+data/lumina_syphon/filesystems/*.json
+data/intelligence/*.json
+data/karaoke_matrix_analysis/*.wav
+
+# Large directories (should not be in git)
+/personaplex/
+/models/
+/logs/
+/output/
+/.npm-cache/
+/.mypy_cache/
+/venv/
+/env/

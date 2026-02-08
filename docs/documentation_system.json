@@ -1,0 +1,48 @@
+{
+  "structure": {
+    "api_reference": {
+      "source": "scripts/python/",
+      "output": "docs/api/",
+      "format": "markdown",
+      "auto_generate": true
+    },
+    "user_guides": {
+      "location": "docs/guides/",
+      "categories": [
+        "getting_started",
+        "workflows",
+        "troubleshooting"
+      ]
+    },
+    "developer_docs": {
+      "location": "docs/developer/",
+      "categories": [
+        "architecture",
+        "contributing",
+        "testing"
+      ]
+    },
+    "troubleshooting": {
+      "location": "docs/troubleshooting/",
+      "auto_generate_from_errors": true,
+      "common_issues": [
+        "workflow_failures",
+        "api_errors",
+        "config_issues"
+      ]
+    }
+  },
+  "generation": {
+    "schedule": "0 2 * * *",
+    "tools": [
+      "sphinx",
+      "pydoc",
+      "mkdocs"
+    ],
+    "validation": {
+      "check_links": true,
+      "check_examples": true,
+      "spell_check": true
+    }
+  }
+}

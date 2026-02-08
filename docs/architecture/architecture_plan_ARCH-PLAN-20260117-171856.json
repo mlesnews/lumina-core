@@ -1,0 +1,188 @@
+{
+  "plan_id": "ARCH-PLAN-20260117-171856",
+  "created": "2026-01-17T17:18:56.652218",
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "description": "KAIJU (Desktop/Server) must run 7 Iron Legion LLM nodes",
+      "priority": "must",
+      "source": "user",
+      "constraints": {
+        "location": "KAIJU (10.17.17.11)",
+        "nodes": 7,
+        "type": "LLM/Ollama"
+      }
+    },
+    {
+      "id": "REQ-002",
+      "description": "Laptop should use lightweight, appropriate tooling (NOT 7 nodes)",
+      "priority": "must",
+      "source": "user",
+      "constraints": {
+        "location": "laptop",
+        "resource_constraint": "lightweight",
+        "not": "7 nodes"
+      }
+    },
+    {
+      "id": "REQ-003",
+      "description": "Use what works best for each environment",
+      "priority": "must",
+      "source": "user",
+      "constraints": {
+        "philosophy": "pragmatic_tool_selection"
+      }
+    },
+    {
+      "id": "REQ-004",
+      "description": "Documentation must match actual state",
+      "priority": "must",
+      "source": "system",
+      "constraints": {
+        "alignment": "documentation_reality"
+      }
+    },
+    {
+      "id": "REQ-005",
+      "description": "Iron Legion currently working on Docker Compose",
+      "priority": "should",
+      "source": "current_state",
+      "constraints": {
+        "current_tool": "docker_compose",
+        "status": "working"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "component": "Iron Legion",
+      "tool": "Docker Compose",
+      "location": "KAIJU (10.17.17.11)",
+      "reasoning": "Currently working, meets requirement for 7 nodes, simple and effective",
+      "alternatives": [
+        "Kubernetes",
+        "K3s",
+        "Docker Swarm"
+      ],
+      "tradeoffs": {
+        "pros": [
+          "Working",
+          "Simple",
+          "Direct",
+          "No migration needed"
+        ],
+        "cons": [
+          "Not K8s",
+          "Single host"
+        ]
+      }
+    },
+    {
+      "id": "DEC-002",
+      "component": "Laptop K8s",
+      "tool": "Docker Desktop K8s (reduced nodes) OR lightweight alternative",
+      "location": "Laptop",
+      "reasoning": "User doesn't want 7 nodes on laptop. Need lightweight solution.",
+      "alternatives": [
+        "Reduce K8s nodes to 1-2",
+        "Disable K8s",
+        "Use Docker Compose",
+        "Use lightweight K3s"
+      ],
+      "tradeoffs": {
+        "pros": [
+          "Resource efficient",
+          "Meets requirement"
+        ],
+        "cons": [
+          "May need reconfiguration"
+        ]
+      }
+    },
+    {
+      "id": "DEC-003",
+      "component": "Documentation",
+      "tool": "Update documentation to match reality",
+      "location": "All documentation",
+      "reasoning": "Documentation must reflect actual state, not planned state",
+      "alternatives": [
+        "Keep as-is",
+        "Mark as planned",
+        "Update to reality"
+      ],
+      "tradeoffs": {
+        "pros": [
+          "Clarity",
+          "Truth",
+          "No confusion"
+        ],
+        "cons": [
+          "Requires updates"
+        ]
+      }
+    }
+  ],
+  "current_state": {
+    "kaiju": {
+      "location": "10.17.17.11",
+      "iron_legion": {
+        "tool": "docker_compose",
+        "nodes": 7,
+        "status": "running",
+        "ports": "3001-3007"
+      },
+      "k8s": {
+        "status": "unknown",
+        "deployed": false
+      }
+    },
+    "laptop": {
+      "location": "localhost",
+      "k8s": {
+        "status": "running",
+        "nodes": 7,
+        "workloads": "none",
+        "empty": true
+      },
+      "iron_legion": {
+        "deployed": false
+      }
+    },
+    "documentation": {
+      "state": "misaligned",
+      "reality_gap": "significant"
+    }
+  },
+  "target_state": {
+    "kaiju": {
+      "iron_legion": {
+        "tool": "docker_compose",
+        "nodes": 7,
+        "status": "running"
+      }
+    },
+    "laptop": {
+      "k8s": {
+        "nodes": "1-2 OR disabled",
+        "workloads": "minimal OR none"
+      }
+    },
+    "documentation": {
+      "state": "aligned",
+      "reality_gap": "none"
+    }
+  },
+  "migration_path": [
+    "1. Update documentation to reflect reality",
+    "2. Reduce laptop K8s nodes (or disable if not needed)",
+    "3. Keep Iron Legion on Docker Compose (no change needed)",
+    "4. Verify alignment between docs and reality"
+  ],
+  "risks": [
+    "Documentation confusion (mitigated by update)",
+    "Laptop resource waste (mitigated by node reduction)"
+  ],
+  "validated": false,
+  "validated_by": []
+}

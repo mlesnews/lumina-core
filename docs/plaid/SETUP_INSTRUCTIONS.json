@@ -1,0 +1,72 @@
+{
+  "setup_steps": [
+    {
+      "step": 1,
+      "title": "Create Plaid Account",
+      "description": "Sign up for Plaid at https://dashboard.plaid.com",
+      "actions": [
+        "Go to https://dashboard.plaid.com/signup",
+        "Create account (use sandbox for testing)",
+        "Navigate to Team Settings > Keys",
+        "Copy your Client ID and Secret"
+      ]
+    },
+    {
+      "step": 2,
+      "title": "Store Credentials in Azure Key Vault",
+      "description": "Store Plaid credentials securely",
+      "command": "python scripts/python/setup_plaid_azure.py --add-credentials",
+      "manual_alternative": [
+        "az keyvault secret set --vault-name jarvis-lumina --name plaid-client-id --value <your-client-id>",
+        "az keyvault secret set --vault-name jarvis-lumina --name plaid-secret --value <your-secret>",
+        "az keyvault secret set --vault-name jarvis-lumina --name plaid-environment --value sandbox"
+      ]
+    },
+    {
+      "step": 3,
+      "title": "Test Connection",
+      "description": "Verify credentials work",
+      "command": "python scripts/python/plaid_connection.py --test"
+    },
+    {
+      "step": 4,
+      "title": "Set Up OAuth Flow",
+      "description": "Implement Plaid Link for user authorization",
+      "notes": [
+        "Plaid Link is the UI component for user authorization",
+        "Users connect their bank accounts via Plaid Link",
+        "After authorization, you receive a public_token",
+        "Exchange public_token for access_token using exchange_public_token()"
+      ]
+    },
+    {
+      "step": 5,
+      "title": "Deploy Azure Functions",
+      "description": "Deploy webhook receiver",
+      "actions": [
+        "Azure Function template created in azure_functions/plaid_webhook/",
+        "Deploy to Azure Functions",
+        "Configure webhook URL in Plaid Dashboard",
+        "Enable webhook verification"
+      ]
+    },
+    {
+      "step": 6,
+      "title": "Register Account in JARVIS",
+      "description": "Add Plaid account to financial registry",
+      "command": "python scripts/python/jarvis_financial_cli.py register --type BUDGETING_APP --name 'Plaid Aggregation'"
+    }
+  ],
+  "plaid_resources": {
+    "dashboard": "https://dashboard.plaid.com",
+    "docs": "https://plaid.com/docs/",
+    "link_docs": "https://plaid.com/docs/link/",
+    "api_reference": "https://plaid.com/docs/api/",
+    "sandbox_testing": "https://plaid.com/docs/sandbox/"
+  },
+  "azure_resources": {
+    "key_vault": "https://portal.azure.com/#view/Microsoft_Azure_KeyVault/KeyVaultBrowseBlade",
+    "functions": "https://portal.azure.com/#view/HubsExtension/BrowseResource/resourceType/Microsoft.Web%2Fsites",
+    "setup_guide": "C:\\Users\\mlesn\\Dropbox\\my_projects\\.lumina\\data\\azure_financial\\azure_financial_setup_guide.json"
+  }
+}
