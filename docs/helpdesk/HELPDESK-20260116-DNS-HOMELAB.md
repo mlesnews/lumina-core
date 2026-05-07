@@ -2,11 +2,21 @@
 
 **Ticket ID**: HELPDESK-20260116-DNS-HOMELAB  
 **Priority**: 🔴 **HIGH**  
-**Status**: 🔍 **OPEN**  
+**Status**: ✅ **RESOLVED** (closed 2026-01-16)  
 **Category**: NETWORK / DNS  
 **Created**: 2026-01-16T15:16:40.165014  
+**Resolved**: 2026-01-16T15:17:10.521606  
 **Assigned Team**: NETWORK_TEAM  
 **Tags**: #DNS, #HOMELAB, #PFSENSE, #NAS, #NETWORK, @JARVIS, @HELPDESK
+
+---
+
+## ✅ Resolution Summary
+
+**Resolved**: 2026-01-16T15:17:10.521606  
+**Verification**: DNS resolution verified — both pfSense and NAS DNS responding correctly to queries after upstream DNS servers were configured. Auto-closed on workflow monitor success.
+
+The companion `HELPDESK-20260116-DNS-HOMELAB.json` ticket file in this directory has been the authoritative status record (status=RESOLVED) since the close-out timestamp above. This markdown file is now updated to match. Public-mirror sync was lagging — see `00-MIRROR-SYNC-LOG.md`.
 
 ---
 

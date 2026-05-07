@@ -1,8 +1,9 @@
 # ProtonPass CLI Bug - Confirmed Across Versions
 
-**Date**: 2026-01-16  
-**Status**: 🔴 **CONFIRMED BUG** - Affects multiple versions  
-**Priority**: 🔴 **CRITICAL** - Blocks all CLI operations
+**Date**: 2026-01-16 (opened) · 2026-05-07 (closed with workaround)  
+**Status**: ✅ **RESOLVED — WORKAROUND IN PLACE** (originally CONFIRMED upstream bug)  
+**Priority**: 🟡 **MEDIUM** (downgraded from CRITICAL — no longer a blocker)  
+**Closure Reason**: Upstream Proton bug, but local workaround (`scripts/python/protonpass_auto_login.py`) has been in production use since 2026-01-21 and reliably retrieves credentials. Ticket closed 2026-05-07 after 3+ months of stable workaround operation.
 
 ---
 
@@ -108,6 +109,10 @@ Caused by: The process cannot access the file because it is being used by anothe
 
 ---
 
-**Status**: 🔴 **BLOCKED** - ProtonPass CLI is non-functional due to confirmed bug
+**Status**: ✅ **RESOLVED — WORKAROUND IN PLACE** (closed 2026-05-07)
 
-**Recommendation**: Use ProtonPass GUI or alternative credential storage (Azure Key Vault)
+**Resolution**: Upstream Proton CLI bug was never patched, but `scripts/python/protonpass_auto_login.py` provides a reliable session-establishment workaround that has been in active use since 2026-01-21 (referenced across cluster-restart and credential-copy workflows). System operations are unblocked.
+
+**Recommendation (going forward)**: Continue using `protonpass_auto_login.py` for automation. Re-test direct `pass-cli.exe` operations only after a major Proton release. Azure Key Vault remains a viable fallback if Proton ecosystem becomes unsuitable.
+
+**If upstream patches the CLI**: Re-open this ticket and verify on the new version.
