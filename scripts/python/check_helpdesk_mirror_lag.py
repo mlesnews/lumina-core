@@ -38,14 +38,31 @@ CLOSED_PATTERNS = re.compile(
 
 
 def md_status_token(md_path: Path) -> str:
-    """Extract the 'Status' line value from a markdown ticket."""
+    """
+    Extract the bolded status keyword from the first 'Status' line.
+
+    Markdown ticket headers look like:
+        **Status**: ✅ **RESOLVED** (closed 2026-01-16)
+
+    We want just `RESOLVED` — not the whole line — because the trailing
+    parenthetical can include words like 'closed' that would otherwise
+    fool the open/closed classifier.
+    """
     try:
         text = md_path.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return "?"
     for line in text.splitlines():
-        # Match patterns like '**Status**: ✅ **RESOLVED** (closed ...)'
         if re.match(r"^\s*\*\*Status\*\*\s*:?", line, re.IGNORECASE):
+            # Drop the leading "**Status**:" portion before scanning the
+            # rest of the line for the bolded status keyword.
+            after_label = re.sub(
+                r"^\s*\*\*Status\*\*\s*:?\s*", "", line, count=1, flags=re.IGNORECASE
+            )
+            keyword_match = re.search(r"\*\*([A-Za-z][A-Za-z _\-]+)\*\*", after_label)
+            if keyword_match:
+                return keyword_match.group(1).strip()
+            # No bolded keyword — fall back to the whole line.
             return line.strip()
     return "?"
 
